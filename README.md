@@ -141,6 +141,8 @@ pnpm check
 pnpm pack:dry-run
 ```
 
+Fallow で未使用コード、重複、複雑度を調べるには `pnpm analyze` を実行します。`pnpm analyze:changes` はベースブランチからの変更で新たに生じた指摘を検査し、Pull Request の CI でも実行されます。
+
 Storybook（html-vite）で `stories` 配下の実例をブラウザー上で確認できます。
 
 ```sh
