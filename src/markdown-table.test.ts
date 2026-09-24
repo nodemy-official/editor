@@ -140,6 +140,52 @@ describe("markdown-table", () => {
     expect(serialize(manager.parse(markdown))).toBe(markdown);
   });
 
+  it("preserves non-breaking spaces at cell boundaries", () => {
+    const document = {
+      type: "doc",
+      content: [
+        {
+          type: "table",
+          content: [
+            {
+              type: "tableRow",
+              content: [
+                {
+                  type: "tableHeader",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "heading" }],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "tableRow",
+              content: [
+                {
+                  type: "tableCell",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "\u00a0value\u00a0" }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const markdown = serialize(document);
+
+    expect(markdown).toContain("&#160;value&#160;");
+    expect(manager.parse(markdown)).toStrictEqual(document);
+    expect(serialize(manager.parse(markdown))).toBe(markdown);
+  });
+
   it("escapes literal pipes inside cells so they round trip", () => {
     const serialized = serialize({
       type: "doc",

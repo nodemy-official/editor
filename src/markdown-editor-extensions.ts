@@ -40,12 +40,15 @@ export { isSafeMarkdownLink };
 
 // Tiptap's default Markdown mark handler descends into every child. Inline
 // parents need the mark on their boundary so an enclosing link includes the note.
-function inlineParentStarterKit(footnotes: boolean) {
+function inlineParentStarterKit(
+  footnotes: boolean,
+  escapeInlineMathText: boolean
+) {
   return StarterKit.extend({
     addExtensions() {
       return (this.parent?.() ?? []).map((extension) => {
         if (!["bold", "italic", "strike", "link"].includes(extension.name)) {
-          return withMarkdownReveal(extension, footnotes);
+          return withMarkdownReveal(extension, footnotes, escapeInlineMathText);
         }
         return extension.extend({
           parseMarkdown(
@@ -178,6 +181,10 @@ export function createMarkdownEditorExtensions(
   const gfm = extended && syntax.gfm !== false;
   const footnotes = extended && syntax.footnotes !== false;
   const emojiShortcodes = extended && syntax.emojiShortcodes !== false;
+  const escapeInlineMathText = Boolean(
+    options.math ||
+      options.extensions?.some((extension) => extension.name === "inlineMath")
+  );
   const {
     codeBlock = MarkdownCodeBlock,
     footnoteLabel,
@@ -185,7 +192,7 @@ export function createMarkdownEditorExtensions(
     taskItemLabel,
   } = options;
   return [
-    inlineParentStarterKit(footnotes).configure({
+    inlineParentStarterKit(footnotes, escapeInlineMathText).configure({
       undoRedo: history ? undefined : false,
       codeBlock: false,
       strike: gfm ? undefined : false,

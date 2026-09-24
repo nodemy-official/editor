@@ -8,6 +8,13 @@ import "./markdown-editor.css";
 
 type SyntaxOptions = NonNullable<MarkdownEditorExtensionsOptions["extendedSyntax"]>;
 
+function supportsGfm(syntaxOptions: SyntaxOptions) {
+  return (
+    syntaxOptions !== false &&
+    (typeof syntaxOptions !== "object" || syntaxOptions.gfm !== false)
+  );
+}
+
 interface DemoConfig {
   title: string;
   description: string;
@@ -153,7 +160,6 @@ class MarkdownEditorStoryElement extends HTMLElement {
       checkbox.type = "checkbox";
       checkbox.checked = values[key];
       checkbox.addEventListener("change", () => {
-        this.currentMarkdown = this.editor?.getMarkdown() ?? this.currentMarkdown;
         const nextOptions = {
           gfm: fieldset.querySelector<HTMLInputElement>('input[data-syntax="gfm"]')!.checked,
           footnotes: fieldset.querySelector<HTMLInputElement>(
@@ -176,10 +182,15 @@ class MarkdownEditorStoryElement extends HTMLElement {
   }
 
   private addToolbarButtons(toolbar: HTMLElement) {
-    const actions: Array<{ label: string; title: string; run: (editor: Editor) => void }> = [
+    const actions: Array<{
+      label: string;
+      title: string;
+      command?: string;
+      run: (editor: Editor) => void;
+    }> = [
       { label: "B", title: "太字", run: (editor) => editor.chain().focus().toggleBold().run() },
       { label: "I", title: "斜体", run: (editor) => editor.chain().focus().toggleItalic().run() },
-      { label: "S", title: "取り消し線", run: (editor) => editor.chain().focus().toggleStrike().run() },
+      { label: "S", title: "取り消し線", command: "strike", run: (editor) => editor.chain().focus().toggleStrike().run() },
       { label: "H2", title: "見出し 2", run: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run() },
       { label: "引用", title: "引用", run: (editor) => editor.chain().focus().toggleBlockquote().run() },
       { label: "リスト", title: "箇条書き", run: (editor) => editor.chain().focus().toggleBulletList().run() },
@@ -192,6 +203,9 @@ class MarkdownEditorStoryElement extends HTMLElement {
       button.title = action.title;
       button.setAttribute("aria-label", action.title);
       button.textContent = action.label;
+      if ("command" in action) {
+        button.dataset.command = action.command;
+      }
       button.addEventListener("mousedown", (event) => event.preventDefault());
       button.addEventListener("click", () => {
         if (this.editor) {
@@ -207,6 +221,13 @@ class MarkdownEditorStoryElement extends HTMLElement {
     const host = this.editorHost;
     if (!host) {
       return;
+    }
+
+    const strikeButton = this.querySelector<HTMLButtonElement>(
+      '[data-command="strike"]'
+    );
+    if (strikeButton) {
+      strikeButton.disabled = !supportsGfm(syntaxOptions);
     }
 
     this.destroyEditor();
@@ -233,7 +254,9 @@ class MarkdownEditorStoryElement extends HTMLElement {
       }
     };
     this.editor.on("update", updateOutput);
-    updateOutput();
+    if (this.markdownOutput) {
+      this.markdownOutput.textContent = this.currentMarkdown;
+    }
   }
 
   private destroyEditor() {

@@ -1,8 +1,66 @@
 import { Extension } from "@tiptap/core";
 import { Plugin } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import type { EditorView } from "@tiptap/pm/view";
 import { nameToEmoji } from "gemoji";
+
+interface EmojiTextSegment {
+  from: number;
+  to: number;
+  marks: ProseMirrorNode["marks"];
+}
+
+interface EmojiTextRun {
+  from: number;
+  to: number;
+  text: string;
+  segments: EmojiTextSegment[];
+}
+
+function emojiTextRuns(doc: ProseMirrorNode) {
+  const runs: EmojiTextRun[] = [];
+  let current: EmojiTextRun | undefined;
+
+  doc.descendants((node, pos) => {
+    if (node.type.spec.code || node.attrs.markdownSource) {
+      current = undefined;
+      return false;
+    }
+    if (!node.isText || !node.text) {
+      if (node.isInline) {
+        current = undefined;
+      }
+      return;
+    }
+    if (node.marks.some((mark) => mark.type.spec.code)) {
+      current = undefined;
+      return;
+    }
+
+    const to = pos + node.nodeSize;
+    const segment: EmojiTextSegment = {
+      from: pos,
+      to,
+      marks: node.marks,
+    };
+    if (current?.to === pos) {
+      current.to = to;
+      current.text += node.text;
+      current.segments.push(segment);
+    } else {
+      current = {
+        from: pos,
+        to,
+        text: node.text,
+        segments: [segment],
+      };
+      runs.push(current);
+    }
+  });
+
+  return runs;
+}
 
 export interface EmojiDecorationRenderContext {
   /** The editor view containing the emoji source. */
@@ -70,25 +128,19 @@ export const EmojiDecorations = Extension.create<EmojiDecorationsOptions>({
         props: {
           decorations(state) {
             const decorations: Decoration[] = [];
-            state.doc.descendants((node, pos) => {
-              if (
-                node.type.spec.code ||
-                node.attrs.markdownSource ||
-                node.marks.some((mark) => mark.type.spec.code)
-              ) {
-                return false;
-              }
-              if (!node.isText || !node.text) {
-                return;
-              }
-              for (const match of node.text.matchAll(/:(\+1|[-\w]+):/gu)) {
+            for (const run of emojiTextRuns(state.doc)) {
+              for (const match of run.text.matchAll(/:(\+1|[-\w]+):/gu)) {
                 const name = match[1];
                 if (!Object.hasOwn(nameToEmoji, name)) {
                   continue;
                 }
                 const source = match[0];
-                const from = pos + match.index;
+                const from = run.from + match.index;
                 const to = from + source.length;
+                const marks =
+                  run.segments.find(
+                    (segment) => segment.from <= from && from < segment.to
+                  )?.marks ?? [];
                 const editing =
                   editor.isFocused &&
                   state.selection.from <= to &&
@@ -131,14 +183,14 @@ export const EmojiDecorations = Extension.create<EmojiDecorationsOptions>({
                       // emoji at different positions otherwise collide.
                       {
                         key: `${source}-${from}`,
-                        marks: node.marks,
+                        marks,
                         side: -1,
                       }
                     )
                   );
                 }
               }
-            });
+            }
             return DecorationSet.create(state.doc, decorations);
           },
         },

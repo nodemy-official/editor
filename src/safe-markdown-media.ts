@@ -1,4 +1,5 @@
 import { mergeAttributes } from "@tiptap/core";
+import type { MarkdownParseHelpers, MarkdownToken } from "@tiptap/core";
 import { Image } from "@tiptap/extension-image";
 
 import { textAttribute } from "./attributes";
@@ -45,6 +46,20 @@ export const SafeImage = Image.extend({
   // Emphasis marks around a leaf image serialize dangling delimiters, while a
   // linked image `[![alt](src)](href)` is valid Markdown worth keeping.
   marks: "link",
+  parseMarkdown(token: MarkdownToken, helpers: MarkdownParseHelpers) {
+    // Marked already removes escapes before brackets, but leaves escaped
+    // backslashes and backticks in image alt text. Decode those pairs so the
+    // serializer can escape them without adding characters on every save.
+    const alt = textAttribute(token.text).replace(
+      /\\([\\`])/gu,
+      (_match, character: string) => character
+    );
+    return helpers.createNode("image", {
+      src: token.href,
+      title: token.title,
+      alt,
+    });
+  },
   renderHTML({ HTMLAttributes }) {
     const src =
       typeof HTMLAttributes.src === "string" ? HTMLAttributes.src : "";
@@ -59,7 +74,7 @@ export const SafeImage = Image.extend({
   renderMarkdown(node) {
     const src = textAttribute(node.attrs?.src);
     const alt = textAttribute(node.attrs?.alt).replace(
-      /([\\[\]])/gu,
+      /([\\[\]`])/gu,
       BACKSLASH_ESCAPE
     );
     const image = `![${alt}](${markdownDestination(src)}${markdownTitle(

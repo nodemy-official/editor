@@ -31,6 +31,10 @@ function collapseCellWhitespace(raw: string) {
     raw,
     (chunk) =>
       chunk
+        // marked trims JavaScript whitespace from table cell boundaries.
+        // Keep NBSP as an entity until our table parser restores it from the
+        // inline text token; otherwise a meaningful edge NBSP disappears.
+        .replaceAll("\u00a0", "&#160;")
         .replace(/[ \t]*\r?\n[ \t]*/gu, "<br>")
         .replaceAll("|", String.raw`\|`),
     (span) => span.replaceAll("|", String.raw`\|`)

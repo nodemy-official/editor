@@ -20,6 +20,92 @@ import type { EditorView } from "@tiptap/pm/view";
 
 import { inlineCodeSpans, mapOutsideCodeSpans } from "./markdown-code-span";
 
+function containsLiteralDollar(node: JSONContent): boolean {
+  if (
+    node.type === "inlineMath" ||
+    node.type === "markdownCodeSpan" ||
+    node.attrs?.markdownSource === true
+  ) {
+    return false;
+  }
+  if (
+    node.type === "text" &&
+    !node.marks?.some((mark) => mark.type === "code") &&
+    node.text?.includes("$")
+  ) {
+    return true;
+  }
+  return node.content?.some(containsLiteralDollar) ?? false;
+}
+
+function maskLiteralDollars(node: JSONContent, marker: string): JSONContent {
+  if (
+    node.type === "inlineMath" ||
+    node.type === "markdownCodeSpan" ||
+    node.attrs?.markdownSource === true
+  ) {
+    return node;
+  }
+  if (node.type === "text") {
+    if (
+      node.marks?.some((mark) => mark.type === "code") ||
+      !node.text?.includes("$")
+    ) {
+      return node;
+    }
+    return { ...node, text: node.text.replaceAll("$", marker) };
+  }
+  if (!node.content) {
+    return node;
+  }
+  let changed = false;
+  const content = node.content.map((child) => {
+    const masked = maskLiteralDollars(child, marker);
+    changed ||= masked !== child;
+    return masked;
+  });
+  return changed ? { ...node, content } : node;
+}
+
+function maskLiteralMathText(node: JSONContent) {
+  let marker = "\uE000markdown-literal-dollar\uE001";
+  const serialized = JSON.stringify(node);
+  let suffix = 0;
+  while (serialized.includes(marker)) {
+    marker = `\uE000markdown-literal-dollar-${suffix}\uE001`;
+    suffix += 1;
+  }
+  return { node: maskLiteralDollars(node, marker), marker };
+}
+
+function escapeParagraphBlockStarts(markdown: string) {
+  const spans: Array<{ marker: string; content: string }> = [];
+  let baseMarker = "\uE000markdown-block-code-span\uE001";
+  let suffix = 0;
+  while (markdown.includes(baseMarker)) {
+    baseMarker = `\uE000markdown-block-code-span-${suffix}\uE001`;
+    suffix += 1;
+  }
+  const protectedMarkdown = mapOutsideCodeSpans(
+    markdown,
+    (chunk) => chunk,
+    (content) => {
+      const marker = `${baseMarker}${spans.length}\uE002`;
+      spans.push({ marker, content });
+      return marker;
+    }
+  );
+  let escaped = protectedMarkdown.replaceAll(
+    /(^|\n)( {0,3})(?:(#{1,6})(?=[ \t]|$)|([-+*])(?=[ \t]|$)|(\d{1,9})([.)])(?=[ \t]|$)|((?:-[ \t]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:=[ \t]*)+)(?=[ \t]*$))/gmu,
+    (_match, lineBreak, indent, heading, bullet, digits, delimiter, rule) =>
+      `${lineBreak}${indent}${rule ? `\\${rule}` : heading || bullet ? `\\${heading || bullet}` : `${digits}\\${delimiter}`}`
+  );
+  for (const { marker, content } of spans) {
+    escaped = escaped.replaceAll(marker, () => content);
+  }
+  return escaped;
+}
+
 interface ActiveSource {
   pos: number;
   original: ProseMirrorNode;
@@ -134,7 +220,8 @@ function inlineTarget(editor: Editor, selection: Selection) {
 /** Keep source text editable in the same contenteditable, without escaping its delimiters. */
 export function withMarkdownReveal(
   extension: AnyExtension,
-  footnotes = true
+  footnotes = true,
+  escapeInlineMathText = false
 ): AnyExtension {
   if (
     !(extension instanceof Node) ||
@@ -157,24 +244,36 @@ export function withMarkdownReveal(
       if (node.attrs?.markdownSource) {
         return node.content?.map((child) => child.text ?? "").join("") ?? "";
       }
+      const masked =
+        escapeInlineMathText && containsLiteralDollar(node)
+          ? maskLiteralMathText(node)
+          : undefined;
       const rendered =
         renderMarkdown?.(
           {
             ...node,
-            content: isolateInlineMarks(inlineCodeSpans(node.content)),
+            content: isolateInlineMarks(
+              inlineCodeSpans(masked?.node.content ?? node.content)
+            ),
           },
           helpers,
           context
         ) ?? "";
+      const unmasked = masked
+        ? rendered.replaceAll(masked.marker, String.raw`\$`)
+        : rendered;
       // A `[^label]:` at a line start reparses as a footnote definition, so a
       // footnote reference followed by a colon needs the colon escaped. Line
       // starts inside code spans stay literal; escaping there would write a
       // stray backslash into the span's content.
-      return footnotes
-        ? mapOutsideCodeSpans(rendered, (chunk) =>
+      const withFootnotesEscaped = footnotes
+        ? mapOutsideCodeSpans(unmasked, (chunk) =>
             chunk.replaceAll(/(^|\n)(\[\^[^\]\n]+)\]:/gu, String.raw`$1$2]\:`)
           )
-        : rendered;
+        : unmasked;
+      return node.type === "paragraph"
+        ? escapeParagraphBlockStarts(withFootnotesEscaped)
+        : withFootnotesEscaped;
     },
     whitespace: "pre",
   });

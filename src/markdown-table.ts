@@ -1,6 +1,10 @@
 import { getExtensionField } from "@tiptap/core";
 import type {
+  JSONContent,
   MarkdownLexerConfiguration,
+  MarkdownParseHelpers,
+  MarkdownParseResult,
+  MarkdownToken,
   MarkdownTokenizer,
 } from "@tiptap/core";
 import { preprocessTablePipes, Table } from "@tiptap/extension-table";
@@ -8,6 +12,37 @@ import { preprocessTablePipes, Table } from "@tiptap/extension-table";
 import { renderMarkdownTable } from "./markdown-table-render";
 
 type BlockTokens = MarkdownLexerConfiguration["blockTokens"];
+
+function restoreNbspTextTokens(tokens: MarkdownToken[] | undefined) {
+  return tokens?.map((token) => {
+    const restored = { ...token };
+    // Table cell parsing keeps entities as text tokens. Restore the entity
+    // emitted by renderMarkdownTable while leaving code-span contents literal.
+    if (restored.type === "text" && typeof restored.text === "string") {
+      restored.text = restored.text.replaceAll("&#160;", "\u00a0");
+    }
+    if (restored.tokens) {
+      restored.tokens = restoreNbspTextTokens(restored.tokens);
+    }
+    return restored;
+  });
+}
+
+function restoreTableNbsp(token: MarkdownToken): MarkdownToken {
+  const restoreCell = (cell: MarkdownToken) => ({
+    ...cell,
+    ...(cell.tokens ? { tokens: restoreNbspTextTokens(cell.tokens) } : {}),
+  });
+  return {
+    ...token,
+    ...(Array.isArray(token.header)
+      ? { header: token.header.map(restoreCell) }
+      : {}),
+    ...(Array.isArray(token.rows)
+      ? { rows: token.rows.map((row: MarkdownToken[]) => row.map(restoreCell)) }
+      : {}),
+  };
+}
 
 // marked invokes extension `start`/`tokenizer` callbacks with `this` bound to
 // `{ lexer }`.
@@ -160,6 +195,10 @@ const baseTokenizer = getExtensionField<MarkdownTokenizer | undefined>(
   Table,
   "markdownTokenizer"
 );
+const baseParseMarkdown = getExtensionField<
+  | ((token: MarkdownToken, helpers: MarkdownParseHelpers) => MarkdownParseResult)
+  | undefined
+>(Table, "parseMarkdown");
 
 const markdownTokenizer: MarkdownTokenizer | undefined = baseTokenizer && {
   ...baseTokenizer,
@@ -285,5 +324,12 @@ const markdownTokenizer: MarkdownTokenizer | undefined = baseTokenizer && {
 
 export const MarkdownTable = Table.extend({
   ...(markdownTokenizer ? { markdownTokenizer } : {}),
+  parseMarkdown(token, helpers) {
+    return baseParseMarkdown?.call(
+      this,
+      restoreTableNbsp(token),
+      helpers
+    ) as JSONContent;
+  },
   renderMarkdown: (node, helpers) => renderMarkdownTable(node, helpers),
 });
