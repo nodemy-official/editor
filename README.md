@@ -54,6 +54,22 @@ createMarkdownEditorExtensions({
 
 各項目は個別に `false` にできます。指定しなかった項目は有効です。`emojiShortcodes` はソース Markdown を変更せず、エディター上の表示だけを切り替えます。
 
+### 数式（オプトイン）
+
+`math: true` を指定すると、`$...$` のインライン数式と、別行の `$$` で囲むブロック数式を有効にできます。既定では無効です。
+
+```ts
+import "katex/dist/katex.min.css";
+
+const extensions = createMarkdownEditorExtensions({ math: true });
+```
+
+KaTeX の表示には CSS が必要です。利用側で KaTeX を依存関係に追加し、ブラウザー用のエントリーポイントから上記 stylesheet を読み込んでください。数式は Markdown のまま保存されます。
+
+インライン数式またはブロック数式を選択すると、Markdown ソースを編集できます。フォーカスや選択を数式の外へ移すと、ソースを再解析して数式表示に戻ります。
+
+Nodemy のように `extensions` へ独自の `inlineMath` 拡張を追加している場合は、`math: true` を同時に指定しないでください。同じ数式ノードが二重登録されます。
+
 ### 表示のカスタマイズ
 
 表示用の CSS は利用側で指定します。既定のクラス名も変更でき、表のヒントや絵文字の DOM は描画関数で差し替えられます。
@@ -123,6 +139,18 @@ Node.js 22 以上と pnpm を使います。
 pnpm install
 pnpm check
 pnpm pack:dry-run
+```
+
+Storybook（html-vite）で `stories` 配下の実例をブラウザー上で確認できます。
+
+```sh
+pnpm storybook
+```
+
+静的サイトをビルドするには次を実行します。
+
+```sh
+pnpm build-storybook
 ```
 
 ## License

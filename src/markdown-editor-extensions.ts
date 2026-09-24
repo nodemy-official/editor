@@ -26,6 +26,8 @@ import type {
 } from "./footnotes";
 import { MarkdownCodeBlock } from "./markdown-code-block";
 import { MarkdownCodeSpan } from "./markdown-code-span";
+import { MarkdownBlockMath, MarkdownInlineMath } from "./markdown-math";
+import type { MarkdownMathOptions } from "./markdown-math";
 import {
   BACKSLASH_ESCAPE,
   markdownDestination,
@@ -258,6 +260,8 @@ export interface MarkdownEditorExtensionsOptions {
   extendedSyntax?: ExtendedSyntaxOptions | boolean;
   /** Extra Tiptap extensions appended after the built-ins (annotations, math, …). */
   extensions?: AnyExtension[];
+  /** Enable `$...$` and fenced `$$...$$` math. Disabled by default to allow existing custom math nodes. */
+  math?: boolean | Partial<MarkdownMathOptions>;
   /** Code block node. Defaults to the info-string preserving `MarkdownCodeBlock`; `false` removes code block support. */
   codeBlock?: AnyExtension | false;
   /** Placeholder text shown while the caret sits in an empty block. Disabled when omitted. */
@@ -285,6 +289,16 @@ export interface MarkdownEditorExtensionsOptions {
 export function createMarkdownEditorExtensions(
   options: MarkdownEditorExtensionsOptions = {}
 ) {
+  if (
+    options.math &&
+    options.extensions?.some((extension) =>
+      ["inlineMath", "blockMath"].includes(extension.name)
+    )
+  ) {
+    throw new Error(
+      "math: true cannot be combined with custom inlineMath or blockMath extensions"
+    );
+  }
   const syntax =
     typeof options.extendedSyntax === "object" ? options.extendedSyntax : {};
   const extended = options.extendedSyntax !== false;
@@ -369,6 +383,16 @@ export function createMarkdownEditorExtensions(
         ]),
     MarkdownCodeSpan,
     ...(codeBlock ? [codeBlock] : []),
+    ...(options.math
+      ? [
+          typeof options.math === "object"
+            ? MarkdownInlineMath.configure(options.math)
+            : MarkdownInlineMath,
+          typeof options.math === "object"
+            ? MarkdownBlockMath.configure(options.math)
+            : MarkdownBlockMath,
+        ]
+      : []),
     ...(options.extensions ?? []),
     ...(!emojiShortcodes || options.emojiDecorations === false
       ? []

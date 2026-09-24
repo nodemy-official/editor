@@ -6,6 +6,8 @@ export type { MarkdownEditorExtensionsOptions } from "./markdown-editor-extensio
 export type { ExtendedSyntaxOptions } from "./markdown-editor-extensions";
 export { MarkdownCodeBlock } from "./markdown-code-block";
 export { MarkdownCodeSpan, inlineCodeSpans } from "./markdown-code-span";
+export { MarkdownInlineMath, MarkdownBlockMath } from "./markdown-math";
+export type { MarkdownMathOptions } from "./markdown-math";
 export {
   MarkdownReveal,
   getMarkdownRevealState,

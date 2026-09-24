@@ -479,8 +479,19 @@ export const MarkdownReveal = Extension.create<MarkdownRevealOptions>({
             return;
           }
           const { tr } = state;
+          const selectedBlockMath =
+            state.selection instanceof NodeSelection &&
+            state.selection.node.type.name === "blockMath"
+              ? state.selection.from
+              : null;
           if (reveal.active) {
             restore(editor, tr, reveal.active);
+          }
+          if (selectedBlockMath !== null) {
+            const pos = tr.mapping.map(selectedBlockMath, 1);
+            if (tr.doc.nodeAt(pos)?.type.name === "blockMath") {
+              tr.setSelection(NodeSelection.create(tr.doc, pos));
+            }
           }
           let active: ActiveSource | null = null;
           const { selection } = tr;
@@ -494,6 +505,32 @@ export const MarkdownReveal = Extension.create<MarkdownRevealOptions>({
               ? undefined
               : inlineTarget(editor, selection);
           if (
+            enabled &&
+            selection instanceof NodeSelection &&
+            selection.node.type.name === "blockMath" &&
+            reveal.dismissedAt !== selection.head &&
+            !(reveal.active?.original.type.name === "blockMath" &&
+              reveal.active.pos === selection.from)
+          ) {
+            const { from, to, node } = selection;
+            const source = serialize(editor, node);
+            const firstLineEnd = source.indexOf("\n");
+            active = { pos: from, original: node, source };
+            tr.replaceWith(
+              from,
+              to,
+              editor.schema.nodes.paragraph.create(
+                { markdownSource: true },
+                editor.schema.text(source)
+              )
+            );
+            tr.setSelection(
+              TextSelection.create(
+                tr.doc,
+                from + 1 + (firstLineEnd < 0 ? 0 : firstLineEnd + 1)
+              )
+            );
+          } else if (
             enabled &&
             target &&
             !(reveal.active?.inline && target.from === reveal.active.pos)
@@ -556,7 +593,7 @@ export const MarkdownReveal = Extension.create<MarkdownRevealOptions>({
               internal: true,
               // Keep a boundary caret outside the source until it moves or is clicked.
               dismissedAt:
-                reveal.active?.inline && !active ? tr.selection.head : null,
+                reveal.active && !active ? tr.selection.head : null,
             })
             .setMeta("addToHistory", false);
         },
