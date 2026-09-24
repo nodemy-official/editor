@@ -2,7 +2,6 @@ import type { JSONContent, MarkdownRendererHelpers } from "@tiptap/core";
 
 import { mapOutsideCodeSpans } from "./markdown-code-span";
 
-const CELL_LINE_SEPARATOR = "\u001F";
 const MINIMUM_CELL_WIDTH = 3;
 
 type TableCellAlign = "left" | "right" | "center";
@@ -57,14 +56,12 @@ export function renderMarkdownTable(
 
   const rows: {
     text: string;
-    isHeader: boolean;
     align: TableCellAlign | null;
   }[][] = [];
 
   node.content.forEach((rowNode) => {
     const cells: {
       text: string;
-      isHeader: boolean;
       align: TableCellAlign | null;
     }[] = [];
 
@@ -74,18 +71,15 @@ export function renderMarkdownTable(
           cellNode.content && cellNode.content.length > 1
             ? cellNode.content
                 .map((child) => helpers.renderChildren(child))
-                .join(CELL_LINE_SEPARATOR)
+                .join("\n")
             : cellNode.content
               ? helpers.renderChildren(cellNode.content)
               : "";
 
-        const text = collapseCellWhitespace(
-          raw.split(CELL_LINE_SEPARATOR).join("\n")
-        );
-        const isHeader = cellNode.type === "tableHeader";
+        const text = collapseCellWhitespace(raw);
         const align = cellAlign(cellNode.attrs);
 
-        cells.push({ text, isHeader, align });
+        cells.push({ text, align });
       });
     }
 
@@ -115,7 +109,6 @@ export function renderMarkdownTable(
   });
 
   const headerRow = rows[0];
-  const hasHeader = headerRow.some((cell) => cell.isHeader);
   const colAlignments: (TableCellAlign | null)[] =
     Array.from<TableCellAlign | null>({ length: columnCount }).fill(null);
 
@@ -129,8 +122,11 @@ export function renderMarkdownTable(
 
   let out = "\n";
 
-  const headerTexts = Array.from<number>({ length: columnCount }).map((_, i) =>
-    hasHeader ? headerRow[i]?.text || "" : ""
+  // GFM requires a header row. When a ProseMirror table starts with regular
+  // cells, use that row as the Markdown header instead of inserting an empty
+  // header and serializing every original row as body content.
+  const headerTexts = Array.from<number>({ length: columnCount }).map(
+    (_, i) => headerRow[i]?.text || ""
   );
 
   out += `| ${headerTexts.map((text, index) => pad(text, colWidths[index])).join(" | ")} |\n`;
@@ -154,7 +150,7 @@ export function renderMarkdownTable(
     })
     .join(" | ")} |\n`;
 
-  const body = hasHeader ? rows.slice(1) : rows;
+  const body = rows.slice(1);
   body.forEach((row) => {
     out += `| ${Array.from<number>({ length: columnCount })
       .fill(0)

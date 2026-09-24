@@ -48,7 +48,7 @@ export const SafeImage = Image.extend({
   renderHTML({ HTMLAttributes }) {
     const src =
       typeof HTMLAttributes.src === "string" ? HTMLAttributes.src : "";
-    const safe = isSafeMarkdownLink(src) && !/^(?:mailto|tel):/iu.test(src);
+    const safe = isSafeMarkdownLink(src) && !/^(?:mailto|tel):/iu.test(src.trim());
     return [
       "img",
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {

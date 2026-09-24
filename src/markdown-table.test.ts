@@ -115,6 +115,15 @@ describe("markdown-table", () => {
     expect(text && "text" in text && text.text).toBe("x  y");
   });
 
+  it("preserves unit separator characters inside table cells", () => {
+    const source = "| heading |\n| --- |\n| before\u001fafter |";
+    const document = manager.parse(source);
+    const markdown = serialize(document);
+
+    expect(manager.parse(markdown)).toStrictEqual(document);
+    expect(serialize(manager.parse(markdown))).toBe(markdown);
+  });
+
   it.each([
     "two  spaces",
     "tab\t\tseparated",
@@ -232,6 +241,59 @@ describe("markdown-table", () => {
     const header = reparsed.content?.[0]?.content?.[0];
     expect(header?.content?.[0]?.attrs?.align).toBe("left");
     expect(header?.content?.[1]?.attrs?.align).toBe("right");
+  });
+
+  it("does not add a blank row when serializing a table without header cells", () => {
+    const document = {
+      type: "doc",
+      content: [
+        {
+          type: "table",
+          content: [
+            {
+              type: "tableRow",
+              content: [
+                {
+                  type: "tableCell",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "a" }],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "tableRow",
+              content: [
+                {
+                  type: "tableCell",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "b" }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const markdown = serialize(document);
+    const reparsed = manager.parse(markdown);
+    const table = reparsed.content?.[0];
+
+    expect(table?.type).toBe("table");
+    expect(table?.content).toHaveLength(2);
+    const firstCellText = table?.content?.[0]?.content?.[0]?.content?.[0]
+      ?.content?.[0]?.text;
+    const secondCellText = table?.content?.[1]?.content?.[0]?.content?.[0]
+      ?.content?.[0]?.text;
+    expect(firstCellText).toBe("a");
+    expect(secondCellText).toBe("b");
   });
 
   it("parses separator-heavy documents in bounded time", () => {

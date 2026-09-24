@@ -93,6 +93,14 @@ $$
     expect(JSON.stringify(document)).not.toContain('"type":"inlineMath"');
   });
 
+  it.each(["$5-$6", "$1,000–$2,000", "$5.50—$6.00"])(
+    "does not interpret compact currency range %s as inline math",
+    (range) => {
+      const document = withMath.parse(`Price range: ${range}`);
+      expect(JSON.stringify(document)).not.toContain('"type":"inlineMath"');
+    }
+  );
+
   it("does not interpret code, escaped dollars, or unfinished formulas", () => {
     const source = [
       String.raw`\$x$ and $unfinished`,

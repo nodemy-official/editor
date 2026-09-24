@@ -50,6 +50,11 @@ function inlineMathToken(source: string) {
   if (!source.startsWith("$") || source.startsWith("$$")) {
     return;
   }
+  // In `$5-$6`, the second dollar starts another currency amount, but the
+  // inline delimiter scan would treat it as the closing dollar for `5-`.
+  if (/^\$(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?[-–—]\$\d/u.test(source)) {
+    return;
+  }
   const match = /^\$((?:\\.|[^\\$\n])+?)\$(?!\$)/u.exec(source);
   const latex = match?.[1];
   if (

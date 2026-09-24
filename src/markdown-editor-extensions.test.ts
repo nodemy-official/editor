@@ -154,6 +154,14 @@ describe("safe Markdown media HTML", () => {
               type: "image",
               attrs: { src: "tel:+12025550123", alt: "Unsafe phone" },
             },
+            {
+              type: "image",
+              attrs: { src: "  mailto:a@example.com  ", alt: "Padded mail" },
+            },
+            {
+              type: "image",
+              attrs: { src: " TEL:+12025550123 ", alt: "Padded phone" },
+            },
           ],
         },
       ],
@@ -166,7 +174,9 @@ describe("safe Markdown media HTML", () => {
     );
 
     expect(root.querySelector("a")?.hasAttribute("href")).toBe(false);
-    for (const image of root.querySelectorAll("img")) {
+    const images = root.querySelectorAll("img");
+    expect(images).toHaveLength(4);
+    for (const image of images) {
       expect(image.hasAttribute("src")).toBe(false);
     }
   });
