@@ -17,27 +17,24 @@ interface DemoConfig {
   showSyntaxOptions?: boolean;
   themeClass?: string;
   extensionOptions?: Omit<MarkdownEditorExtensionsOptions, "extendedSyntax">;
-  customizationPoints?: Array<{ setting: string; detail: string }>;
 }
 
 const extendedMarkdown = [
-  "# 拡張構文の例",
+  "# 今週の対応状況",
   "",
-  "**太字**、*斜体*、~~取り消し線~~、`インラインコード`、:smile: を含む文章です。",
+  "検索機能の更新を行いました。完了した項目は **確認済み**、残っている項目は ~~保留~~ としています。",
   "",
-  "## タスクリストと表",
+  "| 作業 | 担当 | 状況 |",
+  "| --- | --- | --- |",
+  "| 検索結果の日付表示 | 佐藤 | 完了 |",
+  "| ヘルプ記事の更新 | 鈴木 | 対応中 |",
   "",
-  "- [x] 完了した項目",
-  "- [ ] これから行う項目",
+  "- [x] 検索結果の日付表示",
+  "- [ ] ヘルプ記事の更新",
   "",
-  "| 項目 | 状態 |",
-  "| --- | --- |",
-  "| Markdown | 編集中 |",
-  "| Storybook | 表示中 |",
+  "検索条件を保存できるようになりました :white_check_mark:。詳しくは https://example.com/changelog を確認してください。[^note]",
   "",
-  "脚注[^note]と URL の自動リンク https://example.com も試せます。",
-  "",
-  "[^note]: 脚注の本文です。",
+  "[^note]: 対応状況は 9 月 24 日時点の内容です。",
 ].join("\n");
 
 const config = {
@@ -113,39 +110,15 @@ class MarkdownEditorStoryElement extends HTMLElement {
     const output = document.createElement("details");
     output.className = "markdown-editor-story__output";
     const summary = document.createElement("summary");
-    summary.textContent = "シリアライズされた Markdown";
+    summary.textContent = "Markdown 出力";
     this.markdownOutput = document.createElement("pre");
     output.append(summary, this.markdownOutput);
 
     workspace.append(toolbar, editorPanel, output);
     this.append(header);
-    if (storyConfig.customizationPoints) {
-      this.append(this.createCustomizationMap(storyConfig.customizationPoints));
-    }
     this.append(workspace);
     this.addToolbarButtons(toolbar);
     this.mountEditor(storyConfig.syntaxOptions ?? true);
-  }
-
-  private createCustomizationMap(
-    points: Array<{ setting: string; detail: string }>
-  ) {
-    const section = document.createElement("section");
-    section.className = "markdown-editor-story__customization-map";
-    const heading = document.createElement("h2");
-    heading.textContent = "この Story で使っているカスタマイズ API";
-    const list = document.createElement("ul");
-    for (const point of points) {
-      const item = document.createElement("li");
-      const setting = document.createElement("code");
-      setting.textContent = point.setting;
-      const detail = document.createElement("span");
-      detail.textContent = point.detail;
-      item.append(setting, detail);
-      list.append(item);
-    }
-    section.append(heading, list);
-    return section;
   }
 
   private createSyntaxOptions(storyConfig: DemoConfig) {
@@ -284,16 +257,21 @@ export const BasicEditing: Story = {
   name: "基本編集",
   render: () =>
     createEditorStory({
-      title: "Markdown を編集する",
+      title: "プロジェクトの進捗",
       description:
-        "本文をクリックして編集できます。選択範囲に書式を付けたり、Markdown の出力を確認したりできます。",
+        "今週の更新内容をまとめています。本文をクリックして編集し、ツールバーから書式を変更できます。",
       markdown: [
-        "# はじめての編集",
+        "# 今週の更新",
         "",
-        "この文章をクリックして書き換えてみてください。**太字**、*斜体*、`コード`も試せます。",
+        "検索画面の改善を行いました。**変更点**や *補足*、`設定ファイル` などの書式を編集できます。",
         "",
-        "- ツールバーから見出しやリストを追加",
-        "- 入力した Markdown は下の出力欄に反映",
+        "## 対応したこと",
+        "",
+        "- 検索結果に更新日を表示",
+        "- [x] キーボード操作を改善",
+        "- [ ] ヘルプ記事を更新",
+        "",
+        "次回の予定は [プロジェクトのページ](https://example.com/project) にまとめています。",
       ].join("\n"),
     }),
 };
@@ -302,10 +280,26 @@ export const ExtendedSyntax: Story = {
   name: "拡張構文",
   render: () =>
     createEditorStory({
-      title: "GFM・脚注・絵文字",
+      title: "スプリントの振り返り",
       description:
-        "GFM の表、タスクリスト、取り消し線と URL 自動リンクに加え、脚注と :smile: の表示を確認できます。",
-      markdown: extendedMarkdown,
+        "作業の進捗を記録した文書です。表、タスクリスト、脚注、絵文字などを編集できます。",
+      markdown: [
+        "# 第 24 スプリント",
+        "",
+        "## 作業状況",
+        "",
+        "| 作業 | 担当 | 状況 |",
+        "| --- | --- | --- |",
+        "| 検索画面の改善 | 佐藤 | 完了 |",
+        "| ヘルプ記事の更新 | 鈴木 | 対応中 |",
+        "",
+        "- [x] 検索結果の日付表示",
+        "- [ ] キーボード操作の確認",
+        "",
+        "検索条件を保存できるようになりました :white_check_mark:。詳細は [変更履歴](https://example.com/changelog) を確認してください。[^sprint]",
+        "",
+        "[^sprint]: 対応状況は 9 月 24 日時点の内容です。",
+      ].join("\n"),
     }),
 };
 
@@ -313,14 +307,12 @@ export const Math: Story = {
   name: "数式（オプトイン）",
   render: () =>
     createEditorStory({
-      title: "Markdown の数式",
+      title: "積分のメモ",
       description:
-        "math: true で有効になります。数式をクリックすると Markdown ソースを直接書き換えられます。別の場所へカーソルを移すと再描画され、下で出力を確認できます。",
+        "数式をクリックして編集できます。カーソルを別の場所へ移すと、数式として表示されます。",
       math: true,
       markdown: [
-        "インライン数式: $E = mc^2$、分数: $\\frac{1}{2}$。",
-        "",
-        "ブロック数式:",
+        "0 から 1 まで $x^2$ を積分すると、次の式になります。",
         "",
         "$$",
         String.raw`\int_0^1 x^2 \, dx = \frac{1}{3}`,
@@ -331,39 +323,42 @@ export const Math: Story = {
 
 export const FullyCustomizedDesign: Story = {
   name: "デザインを全面カスタマイズ",
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "この例では CSS と拡張オプションを変更し、表の空欄ヒント、絵文字、脚注、コード、数式、Markdown 構文の表示を調整しています。本文を編集して、それぞれの表示を確認できます。",
+      },
+    },
+  },
   render: () =>
     createEditorStory({
-      title: "色・余白・記号を、プロダクトのデザインに合わせる",
+      title: "リリースノート",
       description:
-        "既定の青と白のテーマから、夜色のフレームと温かい紙面を使う編集画面へ変更しています。下の本文を編集し、表の空セル、絵文字、脚注、コード、数式と、構文を編集中の表示を確認してください。",
-      themeClass: "markdown-editor-story--atelier",
+        "バージョン 2.8.0 の変更内容をまとめています。本文を編集して、書式や各要素の表示を確認できます。",
+      themeClass: "markdown-editor-story--workspace",
       math: {
         HTMLAttributes: {
-          class: "atelier-math",
-          "data-math-skin": "orchid",
+          class: "release-math",
+          "data-math-style": "report",
         },
       },
       extensionOptions: {
         tablePlaceholders: {
-          emptyCellClassName: "atelier-empty-cell",
-          placeholderClassName: "atelier-empty-hint",
-          placeholderText: "ADD",
+          emptyCellClassName: "release-empty-cell",
+          placeholderClassName: "release-table-hint",
+          placeholderText: "入力",
           renderPlaceholder: ({ document, className, text }) => {
             const placeholder = document.createElement("span");
             placeholder.className = className;
             placeholder.setAttribute("aria-hidden", "true");
-            const marker = document.createElement("span");
-            marker.className = "atelier-empty-hint__marker";
-            marker.textContent = "+";
-            const label = document.createElement("span");
-            label.textContent = text;
-            placeholder.append(marker, label);
+            placeholder.textContent = `＋ ${text}`;
             return placeholder;
           },
         },
         emojiDecorations: {
-          sourceClassName: "atelier-emoji-source",
-          emojiClassName: "atelier-emoji",
+          sourceClassName: "release-emoji-source",
+          emojiClassName: "release-emoji",
           renderEmoji: ({ document, name, emoji, className }) => {
             const element = document.createElement("span");
             element.className = className;
@@ -374,89 +369,60 @@ export const FullyCustomizedDesign: Story = {
           },
         },
         markdownReveal: {
-          revealedClass: "atelier-markdown-revealed",
-          sourceClass: "atelier-markdown-source",
+          revealedClass: "release-markdown-revealed",
+          sourceClass: "release-markdown-source",
         },
         footnoteReference: {
-          HTMLAttributes: { class: "atelier-footnote-reference" },
-          renderLabel: (label) => `ref ${label}`,
-          ariaLabel: (label) => `脚注 ${label} へ移動`,
+          HTMLAttributes: { class: "release-footnote-reference" },
+          renderLabel: (label) => label,
+          ariaLabel: (label) => `脚注 ${label} を表示`,
         },
         footnoteDefinition: {
-          HTMLAttributes: { class: "atelier-footnote-definition" },
+          HTMLAttributes: { class: "release-footnote-definition" },
           ariaLabel: (label) => `脚注 ${label} の本文`,
         },
         codeHighlighting: {
-          decorationClass: "atelier-code-token",
+          decorationClass: "release-code-token",
           tokenColor: ({ content, darkColor }) => {
             const token = content.trim();
             if (/^(const|function|return|await)$/u.test(token)) {
-              return "var(--atelier-code-keyword)";
+              return "var(--release-code-keyword)";
             }
             if (/^["'`]/u.test(token)) {
-              return "var(--atelier-code-string)";
+              return "var(--release-code-string)";
             }
             return darkColor;
           },
         },
       },
-      customizationPoints: [
-        {
-          setting: "themeClass + CSS variables",
-          detail: "Story 専用の配色、書体、余白、ボタン、表、出力欄を定義",
-        },
-        {
-          setting: "tablePlaceholders.renderPlaceholder",
-          detail: "空セルに独自の追加マークとラベルを描画",
-        },
-        {
-          setting: "emojiDecorations.renderEmoji",
-          detail: "絵文字 DOM とアクセシブルなラベルを置き換え",
-        },
-        {
-          setting: "markdownReveal.revealedClass / sourceClass",
-          detail: "Markdown 構文の表示状態を専用クラスで装飾",
-        },
-        {
-          setting: "footnoteReference.renderLabel / HTMLAttributes",
-          detail: "脚注マーカーの文言・クラスと本文の見た目を変更",
-        },
-        {
-          setting: "codeHighlighting.decorationClass / tokenColor",
-          detail: "コードトークンへ独自クラスを付け、色を CSS 変数へ接続",
-        },
-        {
-          setting: "math.HTMLAttributes",
-          detail: "インライン・ブロック数式にテーマ用クラスを設定",
-        },
-      ],
       markdown: [
-        "# 色と記号を編集する",
+        "# バージョン 2.8.0",
         "",
-        "紙面の **強調**、*斜体*、`inline code`、:sparkles:、脚注[^palette] と数式 $a^2 + b^2 = c^2$ を試せます。",
+        "9 月 24 日に公開しました。**検索結果の改善**に加え、設定画面の *表示速度* を見直しています :white_check_mark:。詳細は [更新履歴](https://example.com/releases/2.8.0) をご覧ください。[^release]",
         "",
-        "> 引用やリンクも、この編集領域のスタイルに合わせて変わります。",
+        "## 変更内容",
         "",
-        "| トークン | 用途 | 状態 |",
+        "| 項目 | 内容 | 状況 |",
         "| --- | --- | --- |",
-        "| --paper | 背景 | ready |",
-        "| --accent | 強調 | review |",
+        "| 検索 | 結果に更新日を表示 | 完了 |",
+        "| 設定 | 保存後の案内を追加 | 完了 |",
+        "| 通知 | メール通知の設定 | 対応中 |",
         "|  |  |  |",
         "",
         "```typescript",
-        'const palette = { accent: "#ff4f81", paper: "#fff5df" };',
-        "function applyTheme(name: string) {",
-        "  return `${name} · ${palette.accent}`;",
+        "const DEFAULT_PAGE_SIZE = 20;",
+        "function getPageCount(totalItems: number) {",
+        "  return Math.ceil(totalItems / DEFAULT_PAGE_SIZE);",
         "}",
         "```",
         "",
-        "ブロック数式:",
+        "検索結果が $n=128$ 件の場合、ページ数は次の式で求められます。",
         "",
         "$$",
-        String.raw`\sum_{i=1}^{n} i = \frac{n(n+1)}{2}`,
+        String.raw`p = \left\lceil \frac{n}{20} \right\rceil`,
         "$$",
         "",
-        "[^palette]: 太字やリンクの上にカーソルを置き、Markdown 構文が現れる表示も確認できます。",
+        "[^release]: メール通知の設定は、順次利用できるようになります。",
       ].join("\n"),
     }),
 };
@@ -465,9 +431,9 @@ export const SyntaxOptions: Story = {
   name: "構文オプションの切り替え",
   render: () =>
     createEditorStory({
-      title: "拡張構文を切り替える",
+      title: "本文の表示設定",
       description:
-        "チェックを切り替えると現在の文章を保ったまま Editor を作り直し、構文設定を反映します。",
+        "設定を切り替えると、該当する書式の表示が変わります。本文の編集内容は維持されます。",
       markdown: extendedMarkdown,
       syntaxOptions: true,
       showSyntaxOptions: true,

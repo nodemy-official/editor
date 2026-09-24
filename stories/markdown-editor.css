@@ -30,9 +30,9 @@
 .markdown-editor-story__workspace {
   overflow: hidden;
   border: 1px solid var(--editor-line);
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fff;
-  box-shadow: 0 8px 24px rgb(27 39 68 / 7%);
+  box-shadow: none;
 }
 
 .markdown-editor-story__syntax-options {
@@ -43,7 +43,7 @@
   padding: 16px 20px 14px;
   border: 0;
   border-bottom: 1px solid var(--editor-line);
-  background: #f7f8fc;
+  background: #f7f8f7;
 }
 
 .markdown-editor-story__syntax-options legend {
@@ -71,7 +71,7 @@
   gap: 6px;
   padding: 12px 16px;
   border-bottom: 1px solid var(--editor-line);
-  background: #fbfcfe;
+  background: #fff;
 }
 
 .markdown-editor-story__tool {
@@ -223,366 +223,212 @@
   white-space: pre-wrap;
 }
 
-/* A deliberately distinct product skin used by FullyCustomizedDesign. */
-.markdown-editor-story--atelier {
-  --editor-ink: #f8efe4;
-  --editor-muted: #d2bed4;
-  --editor-line: #705477;
-  --editor-accent: #ff84a9;
-  max-width: 1120px;
-  padding: 26px;
-  border: 1px solid #4c3655;
-  border-radius: 30px;
-  background:
-    radial-gradient(ellipse at 94% 0%, rgb(136 57 131 / 35%), transparent 38%),
-    #17121f;
-  box-shadow: 0 24px 75px rgb(26 12 31 / 28%);
-  color: var(--editor-ink);
-  font-family: "Avenir Next", Avenir, ui-sans-serif, system-ui, sans-serif;
+.markdown-editor-story--workspace {
+  --editor-ink: #26332f;
+  --editor-muted: #68766f;
+  --editor-line: #d9e0dc;
+  --editor-accent: #386b57;
+  --release-code-keyword: #6d4777;
+  --release-code-string: #3f7254;
+  max-width: 920px;
 }
 
-.markdown-editor-story--atelier .markdown-editor-story__header {
-  margin: 0 0 20px;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__header::before {
-  display: block;
-  margin-bottom: 10px;
-  color: #f7b84b;
-  content: "ATELIER / INTERFACE STUDY  —  07";
-  font: 700 11px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  letter-spacing: 0.16em;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__header h1 {
-  max-width: 820px;
-  margin-bottom: 10px;
-  color: #fff4e5;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(32px, 5vw, 54px);
-  font-weight: 500;
-  letter-spacing: -0.045em;
-  line-height: 1.08;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__header p {
-  max-width: 760px;
-  color: #d6c8d7;
-  font-size: 14px;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__customization-map {
-  margin: 0 0 18px;
-  padding: 18px 20px 20px;
-  border: 1px solid #503c59;
-  border-radius: 18px;
-  background: rgb(39 29 49 / 80%);
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__customization-map h2 {
-  margin: 0 0 14px;
-  color: #f8d8ef;
-  font: 650 13px/1.4 ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: 0.04em;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__customization-map ul {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__customization-map li {
-  min-width: 0;
-  padding: 11px 12px;
-  border: 1px solid #493752;
-  border-radius: 11px;
-  background: #211a2a;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__customization-map code {
-  display: block;
-  margin-bottom: 5px;
-  color: #f7b84b;
-  font: 600 11px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  overflow-wrap: anywhere;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__customization-map li span {
-  display: block;
-  color: #d0c0d3;
-  font-size: 11px;
-  line-height: 1.5;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__workspace {
-  overflow: hidden;
-  border: 1px solid #503a58;
-  border-radius: 22px;
-  background: #211a2b;
-  box-shadow: 0 18px 48px rgb(0 0 0 / 25%);
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__toolbar {
-  gap: 8px;
-  padding: 13px 18px;
-  border-color: #4d3a55;
-  background: #261d32;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__tool {
-  min-height: 36px;
-  padding: 6px 12px;
-  border: 1px solid #654d70;
-  border-radius: 999px;
-  background: #342640;
-  color: #f8efe4;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__tool:hover,
-.markdown-editor-story--atelier .markdown-editor-story__tool:focus-visible {
-  border-color: #f7b84b;
-  background: #f7b84b;
-  color: #24172f;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__editor-panel {
-  padding: clamp(22px, 5vw, 50px);
-  background:
-    linear-gradient(135deg, rgb(255 255 255 / 42%), transparent 45%),
-    #fff5e5;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror {
-  min-height: 390px;
-  color: #30233c;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 16px;
-  line-height: 1.85;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror h1 {
-  margin-bottom: 18px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #e7c9d0;
-  color: #45234d;
-  font-size: clamp(29px, 4vw, 42px);
-  font-weight: 500;
-  letter-spacing: -0.035em;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror h2,
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror h3 {
-  color: #76395f;
-  font-family: "Avenir Next", Avenir, ui-sans-serif, system-ui, sans-serif;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror a {
-  color: #b83f70;
-  text-decoration-color: #e5a4ba;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 3px;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror strong {
-  color: #a43f6b;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror code:not(pre code) {
-  padding: 2px 6px;
-  border: 1px solid #ead3ca;
-  border-radius: 6px;
-  background: #f9e8de;
-  color: #81405d;
-  font-size: 0.86em;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror blockquote {
-  margin: 22px 0;
-  padding: 13px 18px;
-  border: 0;
-  border-left: 4px solid #ca6d95;
-  border-radius: 0 12px 12px 0;
-  background: #f6e3ed;
-  color: #60435f;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror pre {
-  margin: 22px 0;
-  padding: 19px 21px;
-  border: 1px solid #52415e;
-  border-radius: 15px;
-  background: #211b2c;
-  color: #eee2ee;
-  font-size: 13px;
-  line-height: 1.75;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror pre code {
-  color: inherit;
-}
-
-.markdown-editor-story--atelier {
-  --atelier-code-keyword: #ff83ad;
-  --atelier-code-string: #a9d493;
-  --atelier-code-token: #eee2ee;
-}
-
-.markdown-editor-story--atelier .atelier-code-token {
-  color: var(--atelier-code-token);
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror table {
-  margin: 20px 0;
-  overflow: hidden;
-  border: 1px solid #e7c9d0;
-  border-radius: 12px;
-  font-family: "Avenir Next", Avenir, ui-sans-serif, system-ui, sans-serif;
-  font-size: 13px;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror th,
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror td {
-  padding: 10px 13px;
-  border-color: #ead7d4;
-}
-
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror th {
-  background: #4c2e56;
-  color: #fff4e5;
+.markdown-editor-story--workspace .markdown-editor-story__header h1 {
+  font-size: 23px;
   font-weight: 650;
 }
 
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror .atelier-empty-cell {
-  min-width: 100px;
-  background: #fff0c7;
+.markdown-editor-story--workspace .markdown-editor-story__workspace {
+  border-radius: 8px;
+  box-shadow: none;
 }
 
-.markdown-editor-story--atelier .atelier-empty-hint {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: #9a7051;
-  font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  letter-spacing: 0.08em;
+.markdown-editor-story--workspace .markdown-editor-story__toolbar {
+  gap: 4px;
+  padding: 8px 12px;
+  background: #fff;
 }
 
-.markdown-editor-story--atelier .atelier-empty-hint__marker {
-  display: inline-grid;
-  width: 15px;
-  height: 15px;
-  place-items: center;
-  border-radius: 50%;
-  background: #e9bc64;
-  color: #492f3e;
+.markdown-editor-story--workspace .markdown-editor-story__tool {
+  min-width: 34px;
+  min-height: 30px;
+  border-radius: 4px;
+  font-weight: 550;
+}
+
+.markdown-editor-story--workspace .markdown-editor-story__editor-panel {
+  padding: 24px 28px;
+  background: #fff;
+}
+
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror {
+  min-height: 440px;
+  color: #303a36;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror h1 {
+  margin: 0 0 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--editor-line);
+  color: #26332f;
+  font-size: 27px;
+  font-weight: 650;
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror h2,
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror h3 {
+  color: #344b40;
+  font-weight: 650;
+}
+
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror a {
+  color: var(--editor-accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror strong {
+  color: #26332f;
+}
+
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror code:not(pre code) {
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: #f0f3f1;
+  color: #3e5548;
+  font-size: 0.88em;
+}
+
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror blockquote {
+  margin: 18px 0;
+  padding-left: 14px;
+  border-left: 3px solid #b9c9bf;
+  color: var(--editor-muted);
+}
+
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror pre {
+  margin: 18px 0;
+  padding: 14px 16px;
+  border: 1px solid #e1e6e3;
+  border-radius: 6px;
+  background: #f5f7f6;
+  color: #33413a;
   font-size: 13px;
+  line-height: 1.65;
 }
 
-.markdown-editor-story--atelier .atelier-emoji {
-  display: inline-block;
-  padding: 0 4px;
-  border-radius: 7px;
-  background: #f3d8e6;
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror pre code {
+  color: inherit;
+}
+
+.markdown-editor-story--workspace .release-code-token {
+  color: #536158;
+}
+
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror table {
+  margin: 18px 0;
+  font-size: 14px;
+}
+
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror th,
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror td {
+  padding: 8px 10px;
+  border-color: #dce2de;
+}
+
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror th {
+  background: #f4f6f5;
+  color: #34413a;
+  font-weight: 600;
+}
+
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror .release-empty-cell {
+  min-width: 96px;
+  background: #fafbf9;
+}
+
+.markdown-editor-story--workspace .release-table-hint {
+  color: #87938b;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.markdown-editor-story--workspace .release-emoji {
   font-family: "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
-  font-size: 1.2em;
-  line-height: 1.2;
   vertical-align: -0.08em;
 }
 
-.markdown-editor-story--atelier .atelier-emoji-source {
-  border-bottom: 1px dotted #bc6790;
-  color: #994d76;
+.markdown-editor-story--workspace .release-emoji-source {
+  border-bottom: 1px dotted #82988a;
+  color: #536b5b;
 }
 
-.markdown-editor-story--atelier .atelier-footnote-reference {
-  display: inline-block;
-  margin-inline: 2px;
-  padding: 2px 6px;
-  border: 1px solid #e8acc2;
-  border-radius: 999px;
-  background: #f6dce8;
-  color: #8c365f;
-  font: 700 10px/1.2 ui-sans-serif, system-ui, sans-serif;
+.markdown-editor-story--workspace .release-footnote-reference {
+  color: var(--editor-accent);
+  font-size: 0.8em;
   text-decoration: none;
-  vertical-align: 0.15em;
+  vertical-align: super;
 }
 
-.markdown-editor-story--atelier .atelier-footnote-definition {
-  margin-top: 26px;
-  padding: 15px 17px;
-  border: 1px solid #e7c9d0;
-  border-radius: 12px;
-  background: #f9e9e9;
-  color: #68465f;
-  font: 13px/1.6 "Avenir Next", Avenir, ui-sans-serif, system-ui, sans-serif;
+.markdown-editor-story--workspace .release-footnote-definition {
+  margin-top: 22px;
+  padding-top: 12px;
+  border-top: 1px solid var(--editor-line);
+  color: var(--editor-muted);
+  font-size: 13px;
 }
 
-.markdown-editor-story--atelier .atelier-math {
-  color: #63366d;
+.markdown-editor-story--workspace .release-math {
+  color: #375b49;
 }
 
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror span.atelier-math {
-  padding: 3px 7px;
-  border-radius: 7px;
-  background: #f3e2f4;
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror span.release-math {
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: #f0f4f1;
 }
 
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror div.atelier-math {
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror div.release-math {
   overflow-x: auto;
-  margin: 22px 0;
-  padding: 20px;
-  border: 1px solid #e3c7e8;
-  border-radius: 14px;
-  background: #f7eafa;
+  margin: 18px 0;
+  padding: 12px 16px;
+  border-block: 1px solid #e2e8e3;
+  background: #f8faf8;
   text-align: center;
 }
 
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror .atelier-markdown-revealed {
-  outline: 1px dashed #c4487a;
-  outline-offset: 3px;
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror .release-markdown-revealed {
+  outline: 1px solid #d8c891;
+  outline-offset: 2px;
 }
 
-.markdown-editor-story--atelier .markdown-editor-story__editor .ProseMirror .atelier-markdown-source {
+.markdown-editor-story--workspace .markdown-editor-story__editor .ProseMirror .release-markdown-source {
   padding: 1px 3px;
-  border-radius: 4px;
-  background: #f7d5e5;
-  color: #853659;
+  border-radius: 2px;
+  background: #f7f2dd;
+  color: #705e2c;
   font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-.markdown-editor-story--atelier .markdown-editor-story__output {
-  border-color: #4d3a55;
-  background: #1c1625;
+.markdown-editor-story--workspace .markdown-editor-story__output {
+  background: #f7f8f7;
 }
 
-.markdown-editor-story--atelier .markdown-editor-story__output summary {
-  padding: 14px 20px;
-  color: #e6d6e8;
-  font: 700 11px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  letter-spacing: 0.05em;
+.markdown-editor-story--workspace .markdown-editor-story__output summary {
+  color: #59675f;
+  font-weight: 600;
 }
 
-.markdown-editor-story--atelier .markdown-editor-story__output pre {
-  padding: 0 20px 20px;
-  color: #f2b6ce;
+.markdown-editor-story--workspace .markdown-editor-story__output pre {
+  color: #435149;
 }
 
-@media (max-width: 720px) {
-  .markdown-editor-story--atelier {
-    padding: 18px;
-    border-radius: 22px;
-  }
-
-  .markdown-editor-story--atelier .markdown-editor-story__customization-map ul {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 480px) {
-  .markdown-editor-story--atelier .markdown-editor-story__customization-map ul {
-    grid-template-columns: 1fr;
+@media (max-width: 600px) {
+  .markdown-editor-story--workspace .markdown-editor-story__editor-panel {
+    padding: 18px 16px;
   }
 }
