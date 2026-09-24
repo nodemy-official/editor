@@ -13,25 +13,29 @@ export function isSafeMarkdownLink(value: unknown) {
     return false;
   }
   const url = value.trim();
-  if (
-    !url ||
-    [...url].some(
-      // The spread iterator yields code points; charCodeAt reads the first
-      // UTF-16 unit which is sufficient for the ASCII control-range check.
-      (character) =>
-        // oxlint-disable-next-line unicorn/prefer-code-point
-        character.charCodeAt(0) <= 32 || character.charCodeAt(0) === 127
-    )
-  ) {
+  if (!url || /[\u0000-\u001f\u007f]/u.test(value)) {
     return false;
   }
-  // `/\x` normalizes to `//x` under WHATWG URL resolution, escaping the
-  // origin; require the character after `/` to be neither `/` nor `\`.
-  if (/^(?:#|\/(?![/\\])|\.\.?\/)/u.test(url)) {
-    return true;
-  }
+
+  // Keep explicit schemes on the allowlist. In particular, don't mistake an
+  // unknown scheme such as `javascript:` for a relative path.
+  const hasScheme = /^[a-z][a-z\d+.-]*:/iu.test(url);
   try {
-    return ["https:", "http:", "mailto:"].includes(new URL(url).protocol);
+    if (hasScheme) {
+      return ["https:", "http:", "mailto:", "tel:"].includes(
+        new URL(url).protocol
+      );
+    }
+
+    // WHATWG URL parsing treats backslashes like slashes in special URLs.
+    // Reject references that would become protocol-relative (`/\\host` or
+    // `\\\\host`) before resolving them against the editor's origin.
+    if (url.replaceAll("\\", "/").startsWith("//")) {
+      return false;
+    }
+
+    const base = new URL("https://markdown-editor.invalid/");
+    return new URL(url, base).origin === base.origin;
   } catch {
     return false;
   }
@@ -44,7 +48,7 @@ export const SafeImage = Image.extend({
   renderHTML({ HTMLAttributes }) {
     const src =
       typeof HTMLAttributes.src === "string" ? HTMLAttributes.src : "";
-    const safe = isSafeMarkdownLink(src) && !/^mailto:/iu.test(src);
+    const safe = isSafeMarkdownLink(src) && !/^(?:mailto|tel):/iu.test(src);
     return [
       "img",
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {

@@ -25,6 +25,9 @@ const editor = new Editor({
 
 `createMarkdownEditorExtensions` は CommonMark の編集に必要な Tiptap 拡張を返します。GFM の表・タスクリスト・取り消し線・URL の自動リンク、脚注、絵文字ショートコード表示も既定で有効です。
 
+リンクには相対 URL と `http:`、`https:`、`mailto:`、`tel:` を使用できます。画像には相対 URL と `http:`、`https:` を使用できます。
+Markdown の `<...>` 形式で指定した URL のパス中の空白も表示できます。
+
 ```ts
 createMarkdownEditorExtensions({
   extensions: [/* 利用側の Tiptap 拡張 */],
