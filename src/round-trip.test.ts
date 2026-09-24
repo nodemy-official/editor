@@ -13,6 +13,21 @@ function roundTrip(markdown: string) {
 }
 
 describe("Markdown round trips", () => {
+  it("keeps reference link definitions and explicit reference syntax", () => {
+    const source = 'Read [guide][docs].\n\n[docs]: https://example.com "Guide"';
+    const output = roundTrip(source);
+    expect(output).toContain("[guide][docs]");
+    expect(output).toContain('[docs]: https://example.com "Guide"');
+    expect(roundTrip(output)).toBe(output);
+  });
+
+  it("keeps a reference link around an image", () => {
+    const source = "[![alt](/image.png)][page]\n\n[page]: /destination";
+    const output = roundTrip(source);
+    expect(output).toContain("[![alt](/image.png)][page]");
+    expect(output).toContain("[page]: /destination");
+  });
+
   it("keeps footnote references and definitions", () => {
     const markdown = "文[^a]です。\n\n[^a]: 脚注の本文";
     expect(roundTrip(markdown)).toContain("文[^a]です。");

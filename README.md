@@ -27,6 +27,7 @@ const editor = new Editor({
 
 リンクには相対 URL と `http:`、`https:`、`mailto:`、`tel:` を使用できます。画像には相対 URL と `http:`、`https:` を使用できます。
 Markdown の `<...>` 形式で指定した URL のパス中の空白も表示できます。
+参照形式のリンクと定義（`[本文][id]` と `[id]: URL`）も保存時に保持します。省略形の `[id]` と `[id][]` は、本文を編集しても参照先が変わらないよう `[id][id]` に正規化されます。
 
 ```ts
 createMarkdownEditorExtensions({
@@ -56,6 +57,12 @@ createMarkdownEditorExtensions({
 ```
 
 各項目は個別に `false` にできます。指定しなかった項目は有効です。`emojiShortcodes` はソース Markdown を変更せず、エディター上の表示だけを切り替えます。
+
+### Markdown のコピー・貼り付け
+
+選択した内容をコピーすると、クリップボードのプレーンテキストには Markdown を書き込みます。参照リンクだけをコピーする場合は定義が選択範囲外にあるため、URL を含むインラインリンクとしてコピーします。通常の編集状態に Markdown のプレーンテキストを貼り付けると、見出しや強調などを解析して挿入します。HTML を含むクリップボードは通常のリッチテキスト貼り付けとして扱い、コードブロックや Markdown ソースの編集中はテキストをそのまま貼り付けます。
+
+この動作を無効にするには `markdownClipboard: false` を指定してください。
 
 ### 数式（オプトイン）
 
@@ -129,6 +136,7 @@ createMarkdownEditorExtensions({
 
 - `createMarkdownEditorExtensions(options)` と `MarkdownEditorExtensionsOptions`
 - `MarkdownCodeBlock`、`MarkdownCodeSpan`、`MarkdownReveal`
+- `MarkdownClipboard`、`MarkdownReferenceDefinition`
 - `getMarkdownRevealState`、`prepareMarkdownCommand`、`withMarkdownReveal`
 - `FootnoteDefinition`、`FootnoteReference`、`EmojiDecorations`、`TablePlaceholders`
 - `CodeHighlighting`、`highlightCode`、コード言語メタデータ

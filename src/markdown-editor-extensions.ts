@@ -14,6 +14,7 @@ import { StarterKit } from "@tiptap/starter-kit";
 import { Marked, type marked } from "marked";
 
 import { textAttribute } from "./attributes";
+import { MarkdownClipboard } from "./markdown-clipboard";
 import { CodeHighlighting } from "./code-highlighting-decoration";
 import type { CodeHighlightingOptions } from "./code-highlighting-decoration";
 import { EmojiDecorations } from "./emoji-decorations";
@@ -27,6 +28,10 @@ import type {
 import { MarkdownCodeBlock } from "./markdown-code-block";
 import { MarkdownCodeSpan } from "./markdown-code-span";
 import { MarkdownBlockMath, MarkdownInlineMath } from "./markdown-math";
+import {
+  MarkdownReferenceDefinition,
+  withMarkdownReferenceLinkAttributes,
+} from "./markdown-reference-links";
 import type { MarkdownMathOptions } from "./markdown-math";
 import { markdownDestination, markdownTitle } from "./markdown-escape";
 import { MarkdownReveal, withMarkdownReveal } from "./markdown-reveal";
@@ -50,7 +55,7 @@ function inlineParentStarterKit(
         if (!["bold", "italic", "strike", "link"].includes(extension.name)) {
           return withMarkdownReveal(extension, footnotes, escapeInlineMathText);
         }
-        return extension.extend({
+        const decorated = extension.extend({
           parseMarkdown(
             token: MarkdownToken,
             helpers: MarkdownParseHelpers
@@ -116,6 +121,9 @@ function inlineParentStarterKit(
               }
             : {}),
         });
+        return extension.name === "link"
+          ? withMarkdownReferenceLinkAttributes(decorated)
+          : decorated;
       });
     },
   });
@@ -152,6 +160,8 @@ export interface MarkdownEditorExtensionsOptions {
   footnoteDefinition?: Partial<FootnoteDefinitionOptions>;
   /** Enable the StarterKit undo/redo history. Defaults to `true`. */
   history?: boolean;
+  /** Copy selections as Markdown and parse plain Markdown pasted into rendered content. */
+  markdownClipboard?: boolean;
   /** Classes for the active Markdown source. */
   markdownReveal?: Partial<MarkdownRevealOptions>;
   /** Empty table-cell appearance and widget. Set to `false` to disable it. */
@@ -238,6 +248,7 @@ export function createMarkdownEditorExtensions(
         ]
       : []),
     SafeImage,
+    MarkdownReferenceDefinition,
     ...(footnotes
       ? [
           footnoteLabel || options.footnoteDefinition
@@ -282,6 +293,7 @@ export function createMarkdownEditorExtensions(
             : EmojiDecorations,
         ]),
     FormattingShortcuts.configure({ strikethrough: gfm }),
+    ...(options.markdownClipboard === false ? [] : [MarkdownClipboard]),
     options.markdownReveal
       ? MarkdownReveal.configure(options.markdownReveal)
       : MarkdownReveal,

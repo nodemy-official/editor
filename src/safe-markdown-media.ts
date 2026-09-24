@@ -8,6 +8,7 @@ import {
   markdownDestination,
   markdownTitle,
 } from "./markdown-escape";
+import { renderMarkdownLink } from "./markdown-reference-links";
 
 export function isSafeMarkdownLink(value: unknown) {
   if (typeof value !== "string") {
@@ -84,9 +85,7 @@ export const SafeImage = Image.extend({
     // mark on this leaf is wrapped here to keep `[![alt](src)](href)` intact.
     const link = (node.marks ?? []).find((mark) => mark.type === "link");
     return link
-      ? `[${image}](${markdownDestination(
-          textAttribute(link.attrs?.href)
-        )}${markdownTitle(textAttribute(link.attrs?.title))})`
+      ? renderMarkdownLink(link, image)
       : image;
   },
 });
