@@ -23,7 +23,7 @@ const editor = new Editor({
 });
 ```
 
-`createMarkdownEditorExtensions` は標準の Markdown、表、タスクリスト、脚注、絵文字、コードハイライト、カーソル位置での Markdown 構文表示などに使う Tiptap 拡張を返します。
+`createMarkdownEditorExtensions` は CommonMark の編集に必要な Tiptap 拡張を返します。GFM の表・タスクリスト・取り消し線・URL の自動リンク、脚注、絵文字ショートコード表示も既定で有効です。
 
 ```ts
 createMarkdownEditorExtensions({
@@ -35,6 +35,24 @@ createMarkdownEditorExtensions({
   history: false, // undo/redo を利用側で管理する場合
 });
 ```
+
+### CommonMark 拡張構文の切り替え
+
+`extendedSyntax` で CommonMark 以外の構文や表示機能を切り替えられます。`extendedSyntax` を省略するか `true` を渡すとすべて有効です。`false` は GFM、脚注、絵文字ショートコード表示をまとめて無効にし、CommonMark の構文だけを有効にします。
+
+```ts
+createMarkdownEditorExtensions({ extendedSyntax: false });
+
+createMarkdownEditorExtensions({
+  extendedSyntax: {
+    gfm: false, // 表、タスクリスト、~~取り消し線~~、URL の自動リンクを無効化
+    footnotes: false,
+    emojiShortcodes: false, // :smile: の表示置換を無効化
+  },
+});
+```
+
+各項目は個別に `false` にできます。指定しなかった項目は有効です。`emojiShortcodes` はソース Markdown を変更せず、エディター上の表示だけを切り替えます。
 
 ### 表示のカスタマイズ
 

@@ -12,6 +12,7 @@ import { TaskItem } from "@tiptap/extension-task-item";
 import { TaskList } from "@tiptap/extension-task-list";
 import { Markdown } from "@tiptap/markdown";
 import { StarterKit } from "@tiptap/starter-kit";
+import { Marked, type marked } from "marked";
 
 import { textAttribute } from "./attributes";
 import { CodeHighlighting } from "./code-highlighting-decoration";
@@ -100,7 +101,8 @@ const SafeImage = Image.extend({
   },
 });
 
-const FormattingShortcuts = Extension.create({
+const FormattingShortcuts = Extension.create<{ strikethrough: boolean }>({
+  addOptions: () => ({ strikethrough: true }),
   addKeyboardShortcuts() {
     // `editor.commands` binds a fresh transaction per access, so the command
     // must be invoked lazily inside the shortcut rather than captured here.
@@ -144,13 +146,15 @@ const FormattingShortcuts = Extension.create({
         "Control-Shift-b",
         "Control-Shift-B"
       ),
-      ...bind(
-        () => this.editor.commands.toggleStrike(),
-        "Mod-Shift-s",
-        "Mod-Shift-S",
-        "Control-Shift-s",
-        "Control-Shift-S"
-      ),
+      ...(this.options.strikethrough
+        ? bind(
+            () => this.editor.commands.toggleStrike(),
+            "Mod-Shift-s",
+            "Mod-Shift-S",
+            "Control-Shift-s",
+            "Control-Shift-S"
+          )
+        : {}),
     };
   },
   name: "markdownEditorFormattingShortcuts",
@@ -161,83 +165,97 @@ const FormattingShortcuts = Extension.create({
 
 // Tiptap's default Markdown mark handler descends into every child. Inline
 // parents need the mark on their boundary so an enclosing link includes the note.
-const InlineParentStarterKit = StarterKit.extend({
-  addExtensions() {
-    return (this.parent?.() ?? []).map((extension) => {
-      if (!["bold", "italic", "strike", "link"].includes(extension.name)) {
-        return withMarkdownReveal(extension);
-      }
-      return extension.extend({
-        parseMarkdown(
-          token: MarkdownToken,
-          helpers: MarkdownParseHelpers
-        ): MarkdownParseResult {
-          const attrs =
-            extension.name === "link"
-              ? {
-                  href: textAttribute(token.href),
-                  title: textAttribute(token.title) || null,
-                }
-              : undefined;
-          const children = helpers.parseInline(token.tokens ?? []);
-          return children.map((node) => {
-            const withMark = {
-              ...node,
-              marks: [
-                ...(node.marks ?? []),
-                { type: extension.name, ...(attrs ? { attrs } : {}) },
-              ],
-            };
-            if (node.type === "text") {
-              return withMark;
-            }
-            // Leaf schemas support links; container inline nodes (annotations)
-            // also retain formatting and render their own mark boundaries.
-            return node.content || extension.name === "link"
-              ? withMark
-              : { ...node, marks: [] };
-          });
-        },
-        ...(extension.name === "link"
-          ? {
-              renderHTML(
-                this: { options: { HTMLAttributes?: Record<string, unknown> } },
-                { HTMLAttributes }: { HTMLAttributes: Record<string, unknown> }
-              ) {
-                const { href } = HTMLAttributes;
-                return [
-                  "a",
-                  mergeAttributes(
-                    this.options.HTMLAttributes ?? {},
-                    HTMLAttributes,
-                    {
-                      href:
-                        typeof href === "string" && isSafeMarkdownLink(href)
-                          ? href
-                          : undefined,
-                    }
-                  ),
-                  0,
-                ];
-              },
-              renderMarkdown(
-                node: { attrs?: { href?: unknown; title?: unknown } },
-                helpers: {
-                  renderChildren: (value: unknown) => string;
-                }
-              ) {
-                return `[${helpers.renderChildren(node)}](${markdownDestination(
-                  textAttribute(node.attrs?.href)
-                )}${markdownTitle(textAttribute(node.attrs?.title))})`;
-              },
-            }
-          : {}),
+function inlineParentStarterKit(footnotes: boolean) {
+  return StarterKit.extend({
+    addExtensions() {
+      return (this.parent?.() ?? []).map((extension) => {
+        if (!["bold", "italic", "strike", "link"].includes(extension.name)) {
+          return withMarkdownReveal(extension, footnotes);
+        }
+        return extension.extend({
+          parseMarkdown(
+            token: MarkdownToken,
+            helpers: MarkdownParseHelpers
+          ): MarkdownParseResult {
+            const attrs =
+              extension.name === "link"
+                ? {
+                    href: textAttribute(token.href),
+                    title: textAttribute(token.title) || null,
+                  }
+                : undefined;
+            const children = helpers.parseInline(token.tokens ?? []);
+            return children.map((node) => {
+              const withMark = {
+                ...node,
+                marks: [
+                  ...(node.marks ?? []),
+                  { type: extension.name, ...(attrs ? { attrs } : {}) },
+                ],
+              };
+              if (node.type === "text") {
+                return withMark;
+              }
+              // Leaf schemas support links; container inline nodes (annotations)
+              // also retain formatting and render their own mark boundaries.
+              return node.content || extension.name === "link"
+                ? withMark
+                : { ...node, marks: [] };
+            });
+          },
+          ...(extension.name === "link"
+            ? {
+                renderHTML(
+                  this: { options: { HTMLAttributes?: Record<string, unknown> } },
+                  { HTMLAttributes }: { HTMLAttributes: Record<string, unknown> }
+                ) {
+                  const { href } = HTMLAttributes;
+                  return [
+                    "a",
+                    mergeAttributes(
+                      this.options.HTMLAttributes ?? {},
+                      HTMLAttributes,
+                      {
+                        href:
+                          typeof href === "string" && isSafeMarkdownLink(href)
+                            ? href
+                            : undefined,
+                      }
+                    ),
+                    0,
+                  ];
+                },
+                renderMarkdown(
+                  node: { attrs?: { href?: unknown; title?: unknown } },
+                  helpers: {
+                    renderChildren: (value: unknown) => string;
+                  }
+                ) {
+                  return `[${helpers.renderChildren(node)}](${markdownDestination(
+                    textAttribute(node.attrs?.href)
+                  )}${markdownTitle(textAttribute(node.attrs?.title))})`;
+                },
+              }
+            : {}),
+        });
       });
-    });
-  },
-});
+    },
+  });
+}
+
+/** Optional Markdown syntax beyond CommonMark. All groups are enabled by default. */
+export interface ExtendedSyntaxOptions {
+  /** GFM tables, task lists, strikethrough, and bare-URL autolinks. */
+  gfm?: boolean;
+  /** Footnote references and definitions. */
+  footnotes?: boolean;
+  /** Gemoji shortcode display such as `:smile:`. */
+  emojiShortcodes?: boolean;
+}
 
 export interface MarkdownEditorExtensionsOptions {
+  /** Set to `false` for CommonMark-only syntax, or toggle extension groups individually. */
+  extendedSyntax?: ExtendedSyntaxOptions | boolean;
   /** Extra Tiptap extensions appended after the built-ins (annotations, math, …). */
   extensions?: AnyExtension[];
   /** Code block node. Defaults to the info-string preserving `MarkdownCodeBlock`; `false` removes code block support. */
@@ -267,6 +285,12 @@ export interface MarkdownEditorExtensionsOptions {
 export function createMarkdownEditorExtensions(
   options: MarkdownEditorExtensionsOptions = {}
 ) {
+  const syntax =
+    typeof options.extendedSyntax === "object" ? options.extendedSyntax : {};
+  const extended = options.extendedSyntax !== false;
+  const gfm = extended && syntax.gfm !== false;
+  const footnotes = extended && syntax.footnotes !== false;
+  const emojiShortcodes = extended && syntax.emojiShortcodes !== false;
   const {
     codeBlock = MarkdownCodeBlock,
     footnoteLabel,
@@ -274,9 +298,10 @@ export function createMarkdownEditorExtensions(
     taskItemLabel,
   } = options;
   return [
-    InlineParentStarterKit.configure({
+    inlineParentStarterKit(footnotes).configure({
       undoRedo: history ? undefined : false,
       codeBlock: false,
+      strike: gfm ? undefined : false,
       underline: false,
       link: {
         HTMLAttributes: { rel: "noopener noreferrer" },
@@ -287,42 +312,54 @@ export function createMarkdownEditorExtensions(
     // TableKit minus its `start` heuristic: `MarkdownTable` only reports
     // extension start positions the tokenizer can actually accept, which keeps
     // paragraphs ahead of table-like lines from being split per character.
-    MarkdownTable.configure({ resizable: false }),
-    TableCell,
-    TableHeader,
-    TableRow,
-    ...(options.tablePlaceholders === false
+    ...(gfm
+      ? [
+          MarkdownTable.configure({ resizable: false }),
+          TableCell,
+          TableHeader,
+          TableRow,
+        ]
+      : []),
+    ...(!gfm || options.tablePlaceholders === false
       ? []
       : [
           options.tablePlaceholders
             ? TablePlaceholders.configure(options.tablePlaceholders)
             : TablePlaceholders,
         ]),
-    TaskList,
-    TaskItem.configure({
-      HTMLAttributes: { "data-type": "taskItem" },
-      ...(taskItemLabel
-        ? {
-            a11y: {
-              checkboxLabel: (node) => taskItemLabel(node.textContent),
-            },
-          }
-        : {}),
-      nested: true,
-    }),
+    ...(gfm
+      ? [
+          TaskList,
+          TaskItem.configure({
+            HTMLAttributes: { "data-type": "taskItem" },
+            ...(taskItemLabel
+              ? {
+                  a11y: {
+                    checkboxLabel: (node) => taskItemLabel(node.textContent),
+                  },
+                }
+              : {}),
+            nested: true,
+          }),
+        ]
+      : []),
     SafeImage,
-    footnoteLabel || options.footnoteDefinition
-      ? FootnoteDefinition.configure({
-          ...options.footnoteDefinition,
-          ...(footnoteLabel ? { ariaLabel: footnoteLabel } : {}),
-        })
-      : FootnoteDefinition,
-    footnoteLabel || options.footnoteReference
-      ? FootnoteReference.configure({
-          ...options.footnoteReference,
-          ...(footnoteLabel ? { ariaLabel: footnoteLabel } : {}),
-        })
-      : FootnoteReference,
+    ...(footnotes
+      ? [
+          footnoteLabel || options.footnoteDefinition
+            ? FootnoteDefinition.configure({
+                ...options.footnoteDefinition,
+                ...(footnoteLabel ? { ariaLabel: footnoteLabel } : {}),
+              })
+            : FootnoteDefinition,
+          footnoteLabel || options.footnoteReference
+            ? FootnoteReference.configure({
+                ...options.footnoteReference,
+                ...(footnoteLabel ? { ariaLabel: footnoteLabel } : {}),
+              })
+            : FootnoteReference,
+        ]
+      : []),
     ...(options.codeHighlighting === false
       ? []
       : [
@@ -333,20 +370,27 @@ export function createMarkdownEditorExtensions(
     MarkdownCodeSpan,
     ...(codeBlock ? [codeBlock] : []),
     ...(options.extensions ?? []),
-    ...(options.emojiDecorations === false
+    ...(!emojiShortcodes || options.emojiDecorations === false
       ? []
       : [
           options.emojiDecorations
             ? EmojiDecorations.configure(options.emojiDecorations)
             : EmojiDecorations,
         ]),
-    FormattingShortcuts,
+    FormattingShortcuts.configure({ strikethrough: gfm }),
     options.markdownReveal
       ? MarkdownReveal.configure(options.markdownReveal)
       : MarkdownReveal,
     ...(options.placeholder
       ? [Placeholder.configure({ placeholder: options.placeholder })]
       : []),
-    Markdown.configure({ markedOptions: { gfm: true } }),
+    // Tiptap defaults to marked's process-wide singleton. Each editor needs
+    // its own tokenizer registry so different syntax options stay independent.
+    // Tiptap types this option as the callable singleton, but only uses the
+    // instance methods that Marked also implements.
+    Markdown.configure({
+      marked: new Marked() as unknown as typeof marked,
+      markedOptions: { gfm },
+    }),
   ];
 }

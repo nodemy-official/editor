@@ -132,7 +132,10 @@ function inlineTarget(editor: Editor, selection: Selection) {
 }
 
 /** Keep source text editable in the same contenteditable, without escaping its delimiters. */
-export function withMarkdownReveal(extension: AnyExtension): AnyExtension {
+export function withMarkdownReveal(
+  extension: AnyExtension,
+  footnotes = true
+): AnyExtension {
   if (
     !(extension instanceof Node) ||
     !["paragraph", "heading"].includes(extension.name)
@@ -167,9 +170,11 @@ export function withMarkdownReveal(extension: AnyExtension): AnyExtension {
       // footnote reference followed by a colon needs the colon escaped. Line
       // starts inside code spans stay literal; escaping there would write a
       // stray backslash into the span's content.
-      return mapOutsideCodeSpans(rendered, (chunk) =>
-        chunk.replaceAll(/(^|\n)(\[\^[^\]\n]+)\]:/gu, String.raw`$1$2]\:`)
-      );
+      return footnotes
+        ? mapOutsideCodeSpans(rendered, (chunk) =>
+            chunk.replaceAll(/(^|\n)(\[\^[^\]\n]+)\]:/gu, String.raw`$1$2]\:`)
+          )
+        : rendered;
     },
     whitespace: "pre",
   });

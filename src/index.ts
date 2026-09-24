@@ -3,6 +3,7 @@ export {
   isSafeMarkdownLink,
 } from "./markdown-editor-extensions";
 export type { MarkdownEditorExtensionsOptions } from "./markdown-editor-extensions";
+export type { ExtendedSyntaxOptions } from "./markdown-editor-extensions";
 export { MarkdownCodeBlock } from "./markdown-code-block";
 export { MarkdownCodeSpan, inlineCodeSpans } from "./markdown-code-span";
 export {
